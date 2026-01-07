@@ -1,0 +1,67 @@
+oip/
+├── README.md                           # ⭐ 项目总览
+│
+├── .claude/                            # Claude AI 协作配置（全局）
+│   ├── knowledge/
+│   │   ├── architecture.md             # ✅ 架构核心原则
+│   │   ├── coding-standards.md         # ✅ 代码规范
+│   │   └── common-mistakes.md          # ✅ 常见错误修正
+│   ├── commands/
+│   │   └── commit-push.sh              # ✅ 一键提交推送
+│   └── hooks/
+│       └── post-tool-use.sh            # ✅ 代码完成后检查
+│
+├── backend/                            # 后端项目
+│   ├── .claude.md                      # ⭐ 后端上下文入口（AI 必读）
+│   ├── PRD.md                          # ⭐ 产品需求文档
+│   │
+│   ├── stories/                        # 任务拆分
+│   │   ├── _template.md                # ✅ Story 模板
+│   │   └── story-001-基础设施搭建.md   # ✅ 第一个 Story
+│   │
+│   ├── docs/                           # 开发文档
+│   │   ├── ARCHITECTURE.md
+│   │   ├── dpmain-guide.md
+│   │   └── dpsync-guide.md
+│   │
+│   ├── common/                         # 共享内核
+│   │   ├── entity/                     # GORM 数据模型
+│   │   ├── model/                      # 诊断结果结构
+│   │   └── dao/                        # 数据访问层
+│   │
+│   ├── dpmain/                         # 同步 API 服务
+│   │   ├── cmd/apiserver/              # 程序入口
+│   │   ├── internal/app/
+│   │   │   ├── domains/                # 领域层（DDD）
+│   │   │   ├── infra/                  # 基础设施层
+│   │   │   ├── server/                 # 服务器层
+│   │   │   └── pkg/                    # 工具包
+│   │   └── README.md
+│   │
+│   ├── dpsync/                         # 异步 Worker 服务
+│   │   ├── cmd/worker/                 # Worker 入口
+│   │   ├── internal/
+│   │   │   ├── worker/                 # Worker 核心
+│   │   │   └── handlers/               # 诊断处理器
+│   │   └── README.md
+│   │
+│   ├── docker-compose.yml              # 基础设施配置
+│   ├── Makefile                        # 构建任务
+│   └── go.work                         # Go Workspace
+│
+└── frontend/                           # 前端项目（后续开发）
+    ├── .claude.md                      # 前端上下文入口
+    ├── PRD.md                          # 前端需求
+    └── stories/                        # 前端任务
+
+已创建文件：
+✅ README.md (项目总览)
+✅ backend/.claude.md (AI 上下文入口)
+✅ backend/PRD.md (产品需求文档)
+✅ backend/stories/_template.md (Story 模板)
+✅ backend/stories/story-001-基础设施搭建.md (第一个 Story)
+✅ .claude/knowledge/architecture.md (架构知识)
+✅ .claude/knowledge/coding-standards.md (代码规范)
+✅ .claude/knowledge/common-mistakes.md (常见错误)
+✅ .claude/commands/commit-push.sh (提交命令)
+✅ .claude/hooks/post-tool-use.sh (后置钩子)
