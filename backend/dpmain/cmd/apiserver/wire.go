@@ -1,0 +1,151 @@
+//go:build wireinject
+// +build wireinject
+
+package main
+
+import (
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/wire"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+
+	"oip/dpmain/internal/app/config"
+	"oip/dpmain/internal/app/consumer"
+	"oip/dpmain/internal/app/domains/modules/mdaccount"
+	"oip/dpmain/internal/app/domains/modules/mddiagnosis"
+	"oip/dpmain/internal/app/domains/modules/mdorder"
+	"oip/dpmain/internal/app/domains/repo/rpaccount"
+	"oip/dpmain/internal/app/domains/repo/rporder"
+	"oip/dpmain/internal/app/domains/services/svaccount"
+	"oip/dpmain/internal/app/domains/services/svcallback"
+	"oip/dpmain/internal/app/domains/services/svorder"
+	"oip/dpmain/internal/app/infra/mq/lmstfy"
+	"oip/dpmain/internal/app/infra/persistence/redis"
+	"oip/dpmain/internal/app/pkg/logger"
+	"oip/dpmain/internal/app/server/handlers/account"
+	"oip/dpmain/internal/app/server/handlers/order"
+	"oip/dpmain/internal/app/server/routers"
+)
+
+// App 应用实例（包含 HTTP 服务器和 Consumer）
+type App struct {
+	Engine           *gin.Engine
+	CallbackConsumer *consumer.CallbackConsumer
+}
+
+// InitializeApp Wire 依赖注入入口
+func InitializeApp(cfg *config.Config) (*App, func(), error) {
+	wire.Build(
+		InfraSet,
+		ModuleSet,
+		ServiceSet,
+		ConsumerSet,
+		HandlerSet,
+		ProvideLogger,
+		routers.SetupRoutes,
+		wire.Struct(new(App), "*"),
+	)
+	return nil, nil, nil
+}
+
+// InfraSet 基础设施层依赖
+var InfraSet = wire.NewSet(
+	ProvideDB,
+	ProvideRedisClient,
+	ProvideLmstfyClient,
+	rporder.NewOrderRepository,
+	rpaccount.NewAccountRepository,
+)
+
+// ModuleSet 模块层依赖
+var ModuleSet = wire.NewSet(
+	mdorder.NewOrderModule,
+	mdaccount.NewAccountModule,
+	mddiagnosis.NewDiagnosisModule,
+)
+
+// ServiceSet 服务层依赖
+var ServiceSet = wire.NewSet(
+	svorder.NewOrderService,
+	svaccount.NewAccountService,
+	svcallback.NewCallbackService,
+	ProvideQueueName,
+)
+
+// ConsumerSet 消费者层依赖
+var ConsumerSet = wire.NewSet(
+	consumer.NewCallbackConsumer,
+	ProvideConsumerConfig,
+)
+
+// HandlerSet 处理器层依赖
+var HandlerSet = wire.NewSet(
+	order.NewOrderHandler,
+	account.NewAccountHandler,
+)
+
+// ProvideDB 提供数据库连接
+func ProvideDB(cfg *config.Config) (*gorm.DB, func(), error) {
+	db, err := gorm.Open(mysql.Open(cfg.MySQL.DSN), &gorm.Config{})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// 测试数据库连接
+	sqlDB, err := db.DB()
+	if err != nil {
+		return nil, nil, err
+	}
+	if err := sqlDB.Ping(); err != nil {
+		return nil, nil, err
+	}
+
+	cleanup := func() {
+		if sqlDB != nil {
+			sqlDB.Close()
+		}
+	}
+
+	return db, cleanup, nil
+}
+
+// ProvideRedisClient 提供 Redis 客户端
+func ProvideRedisClient(cfg *config.Config) (*redis.PubSubClient, func(), error) {
+	client, err := redis.NewPubSubClient(cfg.Redis.Addr, cfg.Redis.Password, cfg.Redis.DB)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	cleanup := func() {
+		client.Close()
+	}
+
+	return client, cleanup, nil
+}
+
+// ProvideLmstfyClient 提供 Lmstfy 客户端
+func ProvideLmstfyClient(cfg *config.Config) *lmstfy.Client {
+	return lmstfy.NewClient(cfg.Lmstfy.Host, cfg.Lmstfy.Namespace, "01KDCBF5BG0THBC24F1V53XPR1")
+}
+
+// ProvideQueueName 提供队列名称
+func ProvideQueueName(cfg *config.Config) string {
+	return cfg.Lmstfy.Queue
+}
+
+// ProvideLogger 提供日志实例
+func ProvideLogger() logger.Logger {
+	return logger.NewDefaultLogger()
+}
+
+// ProvideConsumerConfig 提供消费者配置
+func ProvideConsumerConfig(cfg *config.Config) *consumer.Config {
+	return &consumer.Config{
+		QueueName:    cfg.Lmstfy.CallbackQueue,
+		Timeout:      3,  // 拉取消息超时 3 秒
+		TTR:          30, // 消息处理超时 30 秒
+		PollInterval: 100 * time.Millisecond,
+	}
+}

@@ -1,0 +1,18 @@
+# dpmain API Server Configuration
+# 注意：此文件为示例配置，实际使用时建议使用环境变量
+
+server:
+  port: "8080"
+
+mysql:
+  dsn: "root:password@tcp(127.0.0.1:3306)/oip?parseTime=true&loc=Local"
+
+redis:
+  addr: "localhost:6379"
+  password: ""
+  db: 0
+
+lmstfy:
+  host: "http://localhost:7777"
+  namespace: "oip"
+  queue: "order_diagnose"

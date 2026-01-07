@@ -1,0 +1,123 @@
+OIP Backend - 项目结构概览
+================================================================================
+
+oip_backend/
+├── go.work                      # Go Workspace 配置（管理 3 个模块）
+├── Makefile                     # 根 Makefile（构建所有模块）
+├── docker-compose.yml           # 基础设施（MySQL, Redis, Lmstfy）
+├── .gitignore                   # Git 忽略文件
+│
+├── README.md                    # 项目概览
+├── SETUP.md                     # 环境配置和验证指南
+├── ARCHITECTURE.md              # 架构详细说明
+├── PROJECT_STRUCTURE.txt        # 本文件（目录结构）
+│
+├── scripts/                     # 脚本目录
+│   └── verify.sh                # 构建验证脚本
+│
+├── common/                      # ============ 共享内核模块 ============
+│   ├── go.mod                   # 模块依赖（gorm, datatypes）
+│   ├── Makefile                 # 构建脚本
+│   │
+│   ├── entity/                  # 数据库模型（GORM）
+│   │   ├── order.go             # Order 实体（包含 diagnose_result）
+│   │   └── account.go           # Account 实体
+│   │
+│   ├── model/                   # 业务模型结构体
+│   │   ├── diagnosis_result.go  # DiagnosisResultData, DiagnosisItem
+│   │   ├── shipping_result.go   # ShippingResult, ShippingRate
+│   │   ├── anomaly_result.go    # AnomalyResult, AnomalyItem
+│   │   └── response.go          # Response, MetaInfo, ErrorDetail
+│   │
+│   └── dao/                     # 数据访问层
+│       ├── order_dao.go         # OrderDAO（预留方法签名）
+│       └── account_dao.go       # AccountDAO（预留方法签名）
+│
+├── dpmain/                      # ============ 同步 API 服务 ============
+│   ├── go.mod                   # 模块依赖（gin, redis, common）
+│   ├── Makefile                 # 构建脚本
+│   │
+│   ├── cmd/                     # 程序入口
+│   │   └── apiserver/
+│   │       └── main.go          # HTTP 服务器启动（Gin）
+│   │
+│   ├── internal/                # 内部业务逻辑
+│   │   ├── api/                 # HTTP Handlers
+│   │   │   ├── order_handler.go # CreateOrder, GetOrder（预留）
+│   │   │   └── account_handler.go # CreateAccount, GetAccount（预留）
+│   │   │
+│   │   ├── service/             # 业务服务层
+│   │   │   └── order_service.go # OrderService（预留）
+│   │   │
+│   │   └── middleware/          # 中间件
+│   │       └── cors.go          # CORS 跨域处理（预留）
+│   │
+│   ├── pkg/                     # 可复用包
+│   │   ├── config/              # 配置管理
+│   │   │   └── config.go        # Config 结构体（预留）
+│   │   │
+│   │   ├── redis/               # Redis 客户端封装
+│   │   │   └── client.go        # Subscribe, Publish（预留）
+│   │   │
+│   │   └── logger/              # 日志（预留）
+│   │
+│   └── scripts/                 # 构建脚本
+│       └── build.sh             # 构建脚本
+│
+└── dpsync/                      # ============ 异步 Worker 服务 ============
+    ├── go.mod                   # 模块依赖（lmstfy, redis, common）
+    ├── Makefile                 # 构建脚本
+    │
+    ├── cmd/                     # 程序入口
+    │   └── worker/
+    │       └── main.go          # Worker 启动（监听退出信号）
+    │
+    ├── internal/                # 内部业务逻辑
+    │   ├── worker/              # Worker 核心
+    │   │   └── worker.go        # Worker（Start, Stop）预留
+    │   │
+    │   └── handlers/            # 业务处理器
+    │       ├── composite_handler.go    # 组合处理器（Handle）预留
+    │       ├── shipping_calculator.go  # 物流费率计算器（Mock）预留
+    │       └── anomaly_checker.go      # 异常检测器（规则引擎）预留
+    │
+    ├── pkg/                     # 可复用包
+    │   ├── config/              # 配置管理
+    │   │   └── config.go        # Config 结构体（预留）
+    │   │
+    │   ├── lmstfy/              # Lmstfy 客户端封装
+    │   │   └── client.go        # Consume, Publish（预留）
+    │   │
+    │   └── logger/              # 日志（预留）
+    │
+    ├── config/                  # 配置文件
+    │   └── worker.yaml          # Worker 配置示例
+    │
+    └── scripts/                 # 构建脚本
+        └── build.sh             # 构建脚本
+
+================================================================================
+
+关键文件统计：
+- Go 源文件：28 个
+- go.mod：3 个（common, dpmain, dpsync）
+- Makefile：4 个（根 + 3 个模块）
+- 配置文件：1 个（dpsync/config/worker.yaml）
+- 文档文件：4 个（README, SETUP, ARCHITECTURE, PROJECT_STRUCTURE）
+
+模块依赖关系：
+- common: 独立模块（被其他模块引用）
+- dpmain: 依赖 common
+- dpsync: 依赖 common
+
+================================================================================
+
+验证构建：
+  cd /Users/cooperswang/GolandProjects/awesomeProject/oip_backend
+  ./scripts/verify.sh
+
+启动服务：
+  make run-dpmain   # API 服务（端口 8080）
+  make run-dpsync   # Worker 服务
+
+================================================================================

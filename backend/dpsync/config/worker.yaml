@@ -1,0 +1,35 @@
+# DPSync Worker 配置示例
+
+app:
+  name: "dpsync-worker"
+  env: "development"
+  log_level: "info"
+
+mysql:
+  dsn: "root:password@tcp(127.0.0.1:3306)/oip?parseTime=true&loc=Local"
+
+redis:
+  addr: "localhost:6379"
+  password: ""
+  db: 0
+
+lmstfy:
+  host: "localhost"
+  port: 7777
+  namespace: "oip"
+  token: "01KDCBF5BG0THBC24F1V53XPR1"
+
+workers:
+  - name: "order-diagnose-worker"
+    queue_name: "order_diagnose"
+    callback_queue: "order_diagnose_callback"  # 新增：回调队列名称
+    subscriber:
+      threads: 3
+      rate: 10ms
+      timeout: 3s
+      ttr: 30s
+      error_backoff: 100ms
+    processor:
+      threads: 5
+      buffer_size: 100
+      timeout: 30s
