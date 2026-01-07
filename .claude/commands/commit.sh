@@ -249,10 +249,19 @@ if [ "$REBASE" = true ]; then
 fi
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
+# 检查当前分支是否有 upstream
+CURRENT_BRANCH=$(git branch --show-current)
+HAS_UPSTREAM=$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null || echo "")
+
 if [ "$AUTO_PUSH" = true ]; then
     echo ""
     echo -e "${YELLOW}🚀 自动推送模式...${NC}"
-    if [ "$REBASE" = true ]; then
+
+    if [ -z "$HAS_UPSTREAM" ]; then
+        # 首次推送，需要设置 upstream
+        echo -e "${YELLOW}  → 首次推送，设置 upstream...${NC}"
+        git push -u origin "$CURRENT_BRANCH"
+    elif [ "$REBASE" = true ]; then
         git push --force-with-lease
     else
         git push
@@ -263,7 +272,12 @@ else
     read -p "是否现在推送到远程？(y/n) " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        if [ "$REBASE" = true ]; then
+        if [ -z "$HAS_UPSTREAM" ]; then
+            # 首次推送，需要设置 upstream
+            echo -e "${YELLOW}  → 首次推送，设置 upstream...${NC}"
+            git push -u origin "$CURRENT_BRANCH"
+            echo -e "${GREEN}✅ 代码已推送到远程${NC}"
+        elif [ "$REBASE" = true ]; then
             echo -e "${YELLOW}⚠️  检测到 rebase，使用 --force-with-lease 推送${NC}"
             read -p "确认强制推送？(y/n) " -n 1 -r
             echo
@@ -279,7 +293,9 @@ else
         fi
     else
         echo -e "${YELLOW}⏸️  推送已跳过，稍后可手动执行:${NC}"
-        if [ "$REBASE" = true ]; then
+        if [ -z "$HAS_UPSTREAM" ]; then
+            echo -e "   ${GREEN}git push -u origin $CURRENT_BRANCH${NC}"
+        elif [ "$REBASE" = true ]; then
             echo -e "   ${GREEN}git push --force-with-lease${NC}"
         else
             echo -e "   ${GREEN}git push${NC}"

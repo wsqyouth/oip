@@ -107,19 +107,39 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 
 echo ""
 echo "✅ 代码已提交: $COMMIT_MSG"
+
+# 检查当前分支是否有 upstream
+CURRENT_BRANCH=$(git branch --show-current)
+HAS_UPSTREAM=$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null || echo "")
+
 echo ""
 echo "📌 下一步操作："
-echo "   推送到远程: git push"
-echo "   或强制推送: git push --force-with-lease"
+if [ -z "$HAS_UPSTREAM" ]; then
+    echo "   推送到远程: git push -u origin $CURRENT_BRANCH"
+else
+    echo "   推送到远程: git push"
+    echo "   或强制推送: git push --force-with-lease"
+fi
 echo ""
 read -p "是否现在推送到远程？(y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo "🚀 推送代码..."
-    git push
+    if [ -z "$HAS_UPSTREAM" ]; then
+        # 首次推送，需要设置 upstream
+        echo "  → 首次推送，设置 upstream..."
+        git push -u origin "$CURRENT_BRANCH"
+    else
+        git push
+    fi
     echo "✅ 代码已推送到远程"
 else
-    echo "⏸️  推送已跳过，稍后可手动执行: git push"
+    echo "⏸️  推送已跳过，稍后可手动执行:"
+    if [ -z "$HAS_UPSTREAM" ]; then
+        echo "   git push -u origin $CURRENT_BRANCH"
+    else
+        echo "   git push"
+    fi
 fi
 
 # 7. 更新提交日志
