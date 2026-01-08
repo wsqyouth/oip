@@ -136,7 +136,7 @@ func ProvideRedisClient(cfg *config.Config) (*redis.PubSubClient, func(), error)
 
 // ProvideLmstfyClient 提供 Lmstfy 客户端
 func ProvideLmstfyClient(cfg *config.Config) *lmstfy.Client {
-	return lmstfy.NewClient(cfg.Lmstfy.Host, cfg.Lmstfy.Namespace, "01KDCBF5BG0THBC24F1V53XPR1")
+	return lmstfy.NewClient(cfg.Lmstfy.Host, cfg.Lmstfy.Namespace, cfg.Lmstfy.Token)
 }
 
 // ProvideQueueName 提供队列名称

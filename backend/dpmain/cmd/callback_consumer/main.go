@@ -13,16 +13,20 @@ import (
 
 	"oip/dpmain/internal/app/config"
 	"oip/dpmain/internal/app/consumer"
+	"oip/dpmain/internal/app/domains/repo/rporder"
 	"oip/dpmain/internal/app/domains/services/svcallback"
 	"oip/dpmain/internal/app/infra/mq/lmstfy"
-	mysqlRepo "oip/dpmain/internal/app/infra/persistence/mysql"
+
 	"oip/dpmain/internal/app/infra/persistence/redis"
 	"oip/dpmain/internal/app/pkg/logger"
 )
 
 func main() {
 	// 1. 加载配置
-	cfg := config.Load()
+	cfg, err := config.LoadDefault()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
 
 	// 2. 初始化日志
 	appLogger := logger.NewDefaultLogger()
@@ -54,7 +58,7 @@ func main() {
 	appLogger.Info("Lmstfy client initialized")
 
 	// 4. 初始化 Repository 层
-	orderRepo := mysqlRepo.NewOrderRepository(db)
+	orderRepo := rporder.NewOrderRepository(db)
 
 	// 5. 初始化 Service 层
 	callbackService := svcallback.NewCallbackService(

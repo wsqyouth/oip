@@ -35,7 +35,10 @@ import (
 
 func main() {
 	// 1. 加载配置
-	cfg := config.Load()
+	cfg, err := config.LoadDefault()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
 
 	if err := cfg.Validate(); err != nil {
 		log.Fatalf("Config validation failed: %v", err)

@@ -1,0 +1,22 @@
+# DPMain API Server 配置
+
+app:
+  name: "dpmain-api"
+  port: "8080"
+  env: "development"
+  log_level: "info"
+
+mysql:
+  dsn: "root:password@tcp(127.0.0.1:3306)/oip?parseTime=true&loc=Local"
+
+redis:
+  addr: "localhost:6379"
+  password: ""
+  db: 0
+
+lmstfy:
+  host: "http://localhost:7777"
+  namespace: "oip"
+  queue: "order_diagnose"
+  callback_queue: "order_diagnose_callback"
+  token: "01KEED5FWJB9GT21S0GVQ4SXXW"
