@@ -2,6 +2,9 @@ package routers
 
 import (
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+	_ "oip/dpmain/docs"
 	"oip/dpmain/internal/app/server/handlers/account"
 	"oip/dpmain/internal/app/server/handlers/order"
 	"oip/dpmain/internal/app/server/middlewares"
@@ -18,13 +21,9 @@ func SetupRoutes(
 	r.Use(middlewares.Logger())
 	r.Use(middlewares.ErrorHandler())
 
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"status":  "ok",
-			"service": "dpmain",
-			"message": "Service is running",
-		})
-	})
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	r.GET("/health", HealthCheck)
 
 	v1 := r.Group("/api/v1")
 	{
@@ -42,4 +41,19 @@ func SetupRoutes(
 	}
 
 	return r
+}
+
+// HealthCheck godoc
+// @Summary      健康检查
+// @Description  检查服务运行状态
+// @Tags         system
+// @Produce      json
+// @Success      200 {object} map[string]string
+// @Router       /health [get]
+func HealthCheck(c *gin.Context) {
+	c.JSON(200, gin.H{
+		"status":  "ok",
+		"service": "dpmain",
+		"message": "Service is running",
+	})
 }

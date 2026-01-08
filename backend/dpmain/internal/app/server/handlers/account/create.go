@@ -9,12 +9,22 @@ import (
 	"oip/dpmain/internal/app/pkg/ginx"
 )
 
-// Create 创建账号接口
-// POST /api/v1/accounts
+// Create godoc
+// @Summary      创建账号
+// @Description  创建一个新的账号，用于后续订单关联
+// @Tags         accounts
+// @Accept       json
+// @Produce      json
+// @Param        request body request.CreateAccountRequest true "创建账号请求"
+// @Success      200 {object} ginx.Response{data=response.AccountResponse} "创建成功"
+// @Failure      400 {object} ginx.Response "参数错误"
+// @Failure      500 {object} ginx.Response "服务器错误"
+// @Security     ApiKeyAuth
+// @Router       /accounts [post]
 func (h *AccountHandler) Create(c *gin.Context) {
 	var req request.CreateAccountRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		ginx.BadRequest(c, err.Error())
+		ginx.BadRequestWithValidation(c, err)
 		return
 	}
 

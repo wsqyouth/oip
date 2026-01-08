@@ -1,0 +1,661 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "跨境订单智能诊断平台后端 API，提供订单接入和智能诊断服务",
+        "title": "OIP Backend API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "email": "support@oip.example.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/api/v1",
+    "paths": {
+        "/accounts": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "创建一个新的账号，用于后续订单关联",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "创建账号",
+                "parameters": [
+                    {
+                        "description": "创建账号请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/oip_dpmain_internal_app_domains_apimodel_request.CreateAccountRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "创建成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/oip_dpmain_internal_app_pkg_ginx.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/oip_dpmain_internal_app_domains_apimodel_response.AccountResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/oip_dpmain_internal_app_pkg_ginx.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/oip_dpmain_internal_app_pkg_ginx.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "根据账号ID获取账号详细信息",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "获取账号详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "账号ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/oip_dpmain_internal_app_pkg_ginx.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/oip_dpmain_internal_app_domains_apimodel_response.AccountResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/oip_dpmain_internal_app_pkg_ginx.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "账号不存在",
+                        "schema": {
+                            "$ref": "#/definitions/oip_dpmain_internal_app_pkg_ginx.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/oip_dpmain_internal_app_pkg_ginx.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "description": "检查服务运行状态",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "system"
+                ],
+                "summary": "健康检查",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/orders": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "创建订单并触发智能诊断（物流费率计算 + 异常检测）\n\nSmart Wait 机制说明：\n- 接口会 Hold 10s 等待诊断结果\n- 10s 内完成诊断：返回 200 OK，包含完整诊断结果\n- 10s 超时：返回 200 OK，code=3001（Processing），需要通过 poll_url 轮询结果\n\n订单状态说明：\n- PENDING: 订单已创建，等待诊断\n- DIAGNOSING: 诊断进行中\n- COMPLETED: 诊断完成（成功或失败）\n- FAILED: 订单处理失败",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "创建订单",
+                "parameters": [
+                    {
+                        "description": "创建订单请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/oip_dpmain_internal_app_domains_apimodel_request.CreateOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "创建成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/oip_dpmain_internal_app_pkg_ginx.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/oip_dpmain_internal_app_domains_apimodel_response.OrderResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/oip_dpmain_internal_app_pkg_ginx.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/oip_dpmain_internal_app_pkg_ginx.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/orders/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "根据订单ID获取订单详细信息（包含诊断结果）\n\n使用场景：\n- 创建订单返回 code=3001 时，通过此接口轮询结果\n- 查询历史订单详情",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "获取订单详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "订单ID（UUID）",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/oip_dpmain_internal_app_pkg_ginx.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/oip_dpmain_internal_app_domains_apimodel_response.OrderResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/oip_dpmain_internal_app_pkg_ginx.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "订单不存在",
+                        "schema": {
+                            "$ref": "#/definitions/oip_dpmain_internal_app_pkg_ginx.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/oip_dpmain_internal_app_pkg_ginx.Response"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "oip_dpmain_internal_app_domains_apimodel_request.Address": {
+            "type": "object",
+            "required": [
+                "city",
+                "contact_name",
+                "country",
+                "postal_code",
+                "street1"
+            ],
+            "properties": {
+                "city": {
+                    "type": "string",
+                    "example": "San Francisco"
+                },
+                "company_name": {
+                    "type": "string",
+                    "example": "ACME Corp"
+                },
+                "contact_name": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "country": {
+                    "type": "string",
+                    "example": "USA"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john@example.com"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+1-415-555-0100"
+                },
+                "postal_code": {
+                    "type": "string",
+                    "example": "94102"
+                },
+                "state": {
+                    "type": "string",
+                    "example": "CA"
+                },
+                "street1": {
+                    "type": "string",
+                    "example": "123 Main St"
+                },
+                "street2": {
+                    "type": "string",
+                    "example": "Suite 100"
+                }
+            }
+        },
+        "oip_dpmain_internal_app_domains_apimodel_request.CreateAccountRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "name"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "john@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                }
+            }
+        },
+        "oip_dpmain_internal_app_domains_apimodel_request.CreateOrderRequest": {
+            "type": "object",
+            "required": [
+                "account_id",
+                "merchant_order_no",
+                "shipment"
+            ],
+            "properties": {
+                "account_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "merchant_order_no": {
+                    "type": "string",
+                    "example": "ORD-20240101-001"
+                },
+                "shipment": {
+                    "$ref": "#/definitions/oip_dpmain_internal_app_domains_apimodel_request.Shipment"
+                }
+            }
+        },
+        "oip_dpmain_internal_app_domains_apimodel_request.Dimension": {
+            "type": "object",
+            "properties": {
+                "depth": {
+                    "type": "number",
+                    "example": 15
+                },
+                "height": {
+                    "type": "number",
+                    "example": 20
+                },
+                "unit": {
+                    "type": "string",
+                    "example": "cm"
+                },
+                "width": {
+                    "type": "number",
+                    "example": 10
+                }
+            }
+        },
+        "oip_dpmain_internal_app_domains_apimodel_request.Item": {
+            "type": "object",
+            "required": [
+                "description",
+                "price",
+                "quantity"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "T-Shirt"
+                },
+                "price": {
+                    "$ref": "#/definitions/oip_dpmain_internal_app_domains_apimodel_request.Money"
+                },
+                "quantity": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "sku": {
+                    "type": "string",
+                    "example": "TSH-001"
+                },
+                "weight": {
+                    "$ref": "#/definitions/oip_dpmain_internal_app_domains_apimodel_request.Weight"
+                }
+            }
+        },
+        "oip_dpmain_internal_app_domains_apimodel_request.Money": {
+            "type": "object",
+            "required": [
+                "amount",
+                "currency"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "example": 19.99
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "USD"
+                }
+            }
+        },
+        "oip_dpmain_internal_app_domains_apimodel_request.Parcel": {
+            "type": "object",
+            "required": [
+                "items",
+                "weight"
+            ],
+            "properties": {
+                "dimension": {
+                    "$ref": "#/definitions/oip_dpmain_internal_app_domains_apimodel_request.Dimension"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/oip_dpmain_internal_app_domains_apimodel_request.Item"
+                    }
+                },
+                "weight": {
+                    "$ref": "#/definitions/oip_dpmain_internal_app_domains_apimodel_request.Weight"
+                }
+            }
+        },
+        "oip_dpmain_internal_app_domains_apimodel_request.Shipment": {
+            "type": "object",
+            "required": [
+                "parcels",
+                "ship_from",
+                "ship_to"
+            ],
+            "properties": {
+                "parcels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/oip_dpmain_internal_app_domains_apimodel_request.Parcel"
+                    }
+                },
+                "ship_from": {
+                    "$ref": "#/definitions/oip_dpmain_internal_app_domains_apimodel_request.Address"
+                },
+                "ship_to": {
+                    "$ref": "#/definitions/oip_dpmain_internal_app_domains_apimodel_request.Address"
+                }
+            }
+        },
+        "oip_dpmain_internal_app_domains_apimodel_request.Weight": {
+            "type": "object",
+            "required": [
+                "unit",
+                "value"
+            ],
+            "properties": {
+                "unit": {
+                    "type": "string",
+                    "example": "kg"
+                },
+                "value": {
+                    "type": "number",
+                    "example": 1.5
+                }
+            }
+        },
+        "oip_dpmain_internal_app_domains_apimodel_response.AccountResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john@example.com"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                }
+            }
+        },
+        "oip_dpmain_internal_app_domains_apimodel_response.DiagnosisItem": {
+            "type": "object",
+            "properties": {
+                "data_json": {},
+                "error": {
+                    "type": "string",
+                    "example": ""
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "SUCCESS",
+                        "FAILED"
+                    ],
+                    "example": "SUCCESS"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "shipping",
+                        "anomaly"
+                    ],
+                    "example": "shipping"
+                }
+            }
+        },
+        "oip_dpmain_internal_app_domains_apimodel_response.DiagnosisResult": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/oip_dpmain_internal_app_domains_apimodel_response.DiagnosisItem"
+                    }
+                }
+            }
+        },
+        "oip_dpmain_internal_app_domains_apimodel_response.OrderResponse": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "diagnosis": {
+                    "$ref": "#/definitions/oip_dpmain_internal_app_domains_apimodel_response.DiagnosisResult"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "merchant_order_no": {
+                    "type": "string",
+                    "example": "ORD-20240101-001"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "PENDING",
+                        "DIAGNOSING",
+                        "COMPLETED",
+                        "FAILED"
+                    ],
+                    "example": "COMPLETED"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                }
+            }
+        },
+        "oip_dpmain_internal_app_pkg_ginx.ErrorDetail": {
+            "type": "object",
+            "properties": {
+                "info": {
+                    "type": "string",
+                    "example": "email is required"
+                },
+                "path": {
+                    "type": "string",
+                    "example": "email"
+                }
+            }
+        },
+        "oip_dpmain_internal_app_pkg_ginx.Meta": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 200
+                },
+                "details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/oip_dpmain_internal_app_pkg_ginx.ErrorDetail"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "OK"
+                }
+            }
+        },
+        "oip_dpmain_internal_app_pkg_ginx.Response": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "meta": {
+                    "$ref": "#/definitions/oip_dpmain_internal_app_pkg_ginx.Meta"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "description": "API Key 用于接口认证（当前版本暂未启用，保留占位）",
+            "type": "apiKey",
+            "name": "api-key",
+            "in": "header"
+        }
+    }
+}

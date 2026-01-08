@@ -189,16 +189,47 @@ CREATE TABLE `orders` (
 
 ### 统一响应格式
 
+参考 AfterShip API 标准，采用嵌套 `meta` 结构：
+
+**成功响应：**
 ```json
 {
   "meta": {
     "code": 200,
-    "type": "OK",
-    "message": "Success"
+    "message": "OK"
   },
-  "data": { ... }
+  "data": {
+    ...
+  }
 }
 ```
+
+**错误响应（带详情）：**
+```json
+{
+  "meta": {
+    "code": 400,
+    "message": "Bad Request",
+    "details": [
+      {
+        "path": "email",
+        "info": "email is required"
+      },
+      {
+        "path": "shipment.ship_from.postal_code",
+        "info": "postal_code must be valid"
+      }
+    ]
+  }
+}
+```
+
+**响应结构说明：**
+- `meta`: 元数据对象（必须）
+  - `code`: 业务状态码（必须）- 200成功, 400客户端错误, 500服务器错误, 3001处理中
+  - `message`: 响应消息（必须）
+  - `details`: 错误详情数组（可选）- 仅在参数验证失败时返回
+- `data`: 业务数据对象（可选）- 成功时包含具体数据
 
 ### 核心接口
 
@@ -219,29 +250,61 @@ Content-Type: application/json
 }
 ```
 
-**响应 A：10s 内完成**
+**响应 A：10s 内完成（诊断成功）**
 ```json
 {
-  "meta": { "code": 200, "type": "OK", "message": "Order diagnosed successfully" },
+  "meta": {
+    "code": 200,
+    "message": "OK"
+  },
   "data": {
-    "id": "ord_550e8400e29b41d4",
-    "status": "DIAGNOSED",
-    "diagnosis": { "items": [...] }
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "account_id": 1,
+    "merchant_order_no": "ORD-20260106-001",
+    "status": "COMPLETED",
+    "diagnosis": {
+      "items": [
+        {
+          "type": "shipping",
+          "status": "SUCCESS",
+          "data_json": {
+            "recommended_code": "FEDEX_GROUND",
+            "rates": [...]
+          }
+        },
+        {
+          "type": "anomaly",
+          "status": "SUCCESS",
+          "data_json": {
+            "has_risk": false,
+            "issues": []
+          }
+        }
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:10Z"
   }
 }
 ```
 
-**响应 B：超时**
+**响应 B：超时（诊断进行中）**
 ```json
 {
-  "meta": { "code": 3001, "type": "Processing", "message": "Order is being diagnosed" },
+  "meta": {
+    "code": 3001,
+    "message": "Order is being diagnosed, please poll for results"
+  },
   "data": {
-    "id": "ord_550e8400e29b41d4",
-    "status": "DIAGNOSING",
-    "poll_url": "/api/v1/orders/ord_550e8400e29b41d4"
+    "order_id": "550e8400-e29b-41d4-a716-446655440000",
+    "poll_url": "/api/v1/orders/550e8400-e29b-41d4-a716-446655440000"
   }
 }
 ```
+
+**说明：**
+- `code=3001` 表示订单诊断进行中，需要客户端通过 `poll_url` 轮询获取最终结果
+- `poll_url` 包含在 `data` 中，方便客户端直接使用
 
 #### 2. 查询订单
 

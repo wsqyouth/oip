@@ -165,6 +165,222 @@ MySQL (订单状态更新) + Redis (状态通知)
 | `rp` | Repository（仓储） | `rporder.OrderRepository` |
 | `sv` | Service（服务） | `svorder.OrderService` |
 
+## API 文档
+
+### Swagger 文档
+
+本项目使用 Swagger（OpenAPI 3.0）生成 API 文档。
+
+#### 生成文档
+
+```bash
+# 在项目根目录执行
+make swagger
+```
+
+#### 访问文档
+
+启动服务后访问：
+- **Swagger UI**: http://localhost:8080/swagger/index.html
+- **JSON 格式**: http://localhost:8080/swagger/doc.json
+
+#### 快速开始
+
+1. 启动服务：
+   ```bash
+   make run
+   ```
+
+2. 打开浏览器访问 Swagger UI
+
+3. 点击 "Authorize" 按钮，输入 API Key（当前版本暂未启用认证，可跳过）
+
+4. 选择任意接口，点击 "Try it out" 进行测试
+
+#### API 概览
+
+- **Base URL**: `http://localhost:8080/api/v1`
+- **认证方式**: API Key (Header: `api-key`) - 暂未启用
+- **文档版本**: v1.0
+
+#### 接口列表
+
+| 分组 | 方法 | 路径 | 说明 |
+|------|------|------|------|
+| System | GET | `/health` | 健康检查 |
+| Accounts | POST | `/api/v1/accounts` | 创建账号 |
+| Accounts | GET | `/api/v1/accounts/{id}` | 获取账号详情 |
+| Orders | POST | `/api/v1/orders` | 创建订单（触发诊断） |
+| Orders | GET | `/api/v1/orders/{id}` | 获取订单详情 |
+
+#### 快速测试示例
+
+**创建账号：**
+```bash
+curl -X POST http://localhost:8080/api/v1/accounts \
+  -H "Content-Type: application/json" \
+  -H "api-key: your-api-key" \
+  -d '{
+    "name": "John Doe",
+    "email": "john@example.com"
+  }'
+```
+
+**成功响应示例：**
+```json
+{
+  "meta": {
+    "code": 200,
+    "message": "OK"
+  },
+  "data": {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@example.com",
+    "created_at": "2024-01-01T00:00:00Z"
+  }
+}
+```
+
+**参数错误响应示例：**
+```json
+{
+  "meta": {
+    "code": 400,
+    "message": "Validation failed",
+    "details": [
+      {
+        "path": "email",
+        "info": "email is required"
+      }
+    ]
+  }
+}
+```
+
+**创建订单：**
+```bash
+curl -X POST http://localhost:8080/api/v1/orders \
+  -H "Content-Type: application/json" \
+  -H "api-key: your-api-key" \
+  -d '{
+    "account_id": 1,
+    "merchant_order_no": "ORD-20240101-001",
+    "shipment": {
+      "ship_from": {
+        "contact_name": "Seller Store",
+        "company_name": "ACME Corp",
+        "street1": "123 Main St",
+        "city": "San Francisco",
+        "state": "CA",
+        "postal_code": "94102",
+        "country": "USA",
+        "phone": "+1-415-555-0100",
+        "email": "seller@example.com"
+      },
+      "ship_to": {
+        "contact_name": "John Doe",
+        "street1": "456 Oak Ave",
+        "city": "Los Angeles",
+        "state": "CA",
+        "postal_code": "90001",
+        "country": "USA",
+        "phone": "+1-213-555-0200",
+        "email": "buyer@example.com"
+      },
+      "parcels": [
+        {
+          "weight": {
+            "value": 1.5,
+            "unit": "kg"
+          },
+          "dimension": {
+            "width": 10.0,
+            "height": 20.0,
+            "depth": 15.0,
+            "unit": "cm"
+          },
+          "items": [
+            {
+              "description": "T-Shirt",
+              "quantity": 2,
+              "price": {
+                "amount": 19.99,
+                "currency": "USD"
+              },
+              "sku": "TSH-001"
+            }
+          ]
+        }
+      ]
+    }
+  }'
+```
+
+**创建订单成功响应（诊断完成）：**
+```json
+{
+  "meta": {
+    "code": 200,
+    "message": "OK"
+  },
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "account_id": 1,
+    "merchant_order_no": "ORD-20240101-001",
+    "status": "COMPLETED",
+    "diagnosis": {
+      "items": [
+        {
+          "type": "shipping",
+          "status": "SUCCESS",
+          "data_json": {...}
+        }
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:10Z"
+  }
+}
+```
+
+**创建订单超时响应（诊断进行中）：**
+```json
+{
+  "meta": {
+    "code": 3001,
+    "message": "Order is being diagnosed, please poll for results"
+  },
+  "data": {
+    "order_id": "550e8400-e29b-41d4-a716-446655440000",
+    "poll_url": "/api/v1/orders/550e8400-e29b-41d4-a716-446655440000"
+  }
+}
+```
+
+#### 导出文档
+
+Swagger 文档可导出为多种格式：
+- 通过 Swagger UI 下载 JSON/YAML
+- 导入 Postman / Insomnia 等 API 工具
+- 集成到 CI/CD 流程
+
+#### 注意事项
+
+1. **Smart Wait 机制**：创建订单接口会等待 10s 等待诊断结果
+   - 10s 内完成：返回完整诊断结果
+   - 10s 超时：返回 code=3001，需通过 GET 接口轮询
+
+2. **订单状态**：
+   - `PENDING`: 等待诊断
+   - `DIAGNOSING`: 诊断进行中
+   - `COMPLETED`: 诊断完成
+   - `FAILED`: 处理失败
+
+3. **认证**：当前版本 API Key 认证暂未启用，后续版本会完善
+
+---
+
 ## 快速开始
 
 ### 构建

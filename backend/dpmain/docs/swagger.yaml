@@ -1,0 +1,455 @@
+basePath: /api/v1
+definitions:
+  oip_dpmain_internal_app_domains_apimodel_request.Address:
+    properties:
+      city:
+        example: San Francisco
+        type: string
+      company_name:
+        example: ACME Corp
+        type: string
+      contact_name:
+        example: John Doe
+        type: string
+      country:
+        example: USA
+        type: string
+      email:
+        example: john@example.com
+        type: string
+      phone:
+        example: +1-415-555-0100
+        type: string
+      postal_code:
+        example: "94102"
+        type: string
+      state:
+        example: CA
+        type: string
+      street1:
+        example: 123 Main St
+        type: string
+      street2:
+        example: Suite 100
+        type: string
+    required:
+    - city
+    - contact_name
+    - country
+    - postal_code
+    - street1
+    type: object
+  oip_dpmain_internal_app_domains_apimodel_request.CreateAccountRequest:
+    properties:
+      email:
+        example: john@example.com
+        type: string
+      name:
+        example: John Doe
+        type: string
+    required:
+    - email
+    - name
+    type: object
+  oip_dpmain_internal_app_domains_apimodel_request.CreateOrderRequest:
+    properties:
+      account_id:
+        example: 1
+        type: integer
+      merchant_order_no:
+        example: ORD-20240101-001
+        type: string
+      shipment:
+        $ref: '#/definitions/oip_dpmain_internal_app_domains_apimodel_request.Shipment'
+    required:
+    - account_id
+    - merchant_order_no
+    - shipment
+    type: object
+  oip_dpmain_internal_app_domains_apimodel_request.Dimension:
+    properties:
+      depth:
+        example: 15
+        type: number
+      height:
+        example: 20
+        type: number
+      unit:
+        example: cm
+        type: string
+      width:
+        example: 10
+        type: number
+    type: object
+  oip_dpmain_internal_app_domains_apimodel_request.Item:
+    properties:
+      description:
+        example: T-Shirt
+        type: string
+      price:
+        $ref: '#/definitions/oip_dpmain_internal_app_domains_apimodel_request.Money'
+      quantity:
+        example: 2
+        type: integer
+      sku:
+        example: TSH-001
+        type: string
+      weight:
+        $ref: '#/definitions/oip_dpmain_internal_app_domains_apimodel_request.Weight'
+    required:
+    - description
+    - price
+    - quantity
+    type: object
+  oip_dpmain_internal_app_domains_apimodel_request.Money:
+    properties:
+      amount:
+        example: 19.99
+        type: number
+      currency:
+        example: USD
+        type: string
+    required:
+    - amount
+    - currency
+    type: object
+  oip_dpmain_internal_app_domains_apimodel_request.Parcel:
+    properties:
+      dimension:
+        $ref: '#/definitions/oip_dpmain_internal_app_domains_apimodel_request.Dimension'
+      items:
+        items:
+          $ref: '#/definitions/oip_dpmain_internal_app_domains_apimodel_request.Item'
+        type: array
+      weight:
+        $ref: '#/definitions/oip_dpmain_internal_app_domains_apimodel_request.Weight'
+    required:
+    - items
+    - weight
+    type: object
+  oip_dpmain_internal_app_domains_apimodel_request.Shipment:
+    properties:
+      parcels:
+        items:
+          $ref: '#/definitions/oip_dpmain_internal_app_domains_apimodel_request.Parcel'
+        type: array
+      ship_from:
+        $ref: '#/definitions/oip_dpmain_internal_app_domains_apimodel_request.Address'
+      ship_to:
+        $ref: '#/definitions/oip_dpmain_internal_app_domains_apimodel_request.Address'
+    required:
+    - parcels
+    - ship_from
+    - ship_to
+    type: object
+  oip_dpmain_internal_app_domains_apimodel_request.Weight:
+    properties:
+      unit:
+        example: kg
+        type: string
+      value:
+        example: 1.5
+        type: number
+    required:
+    - unit
+    - value
+    type: object
+  oip_dpmain_internal_app_domains_apimodel_response.AccountResponse:
+    properties:
+      created_at:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      email:
+        example: john@example.com
+        type: string
+      id:
+        example: 1
+        type: integer
+      name:
+        example: John Doe
+        type: string
+    type: object
+  oip_dpmain_internal_app_domains_apimodel_response.DiagnosisItem:
+    properties:
+      data_json: {}
+      error:
+        example: ""
+        type: string
+      status:
+        enum:
+        - SUCCESS
+        - FAILED
+        example: SUCCESS
+        type: string
+      type:
+        enum:
+        - shipping
+        - anomaly
+        example: shipping
+        type: string
+    type: object
+  oip_dpmain_internal_app_domains_apimodel_response.DiagnosisResult:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/oip_dpmain_internal_app_domains_apimodel_response.DiagnosisItem'
+        type: array
+    type: object
+  oip_dpmain_internal_app_domains_apimodel_response.OrderResponse:
+    properties:
+      account_id:
+        example: 1
+        type: integer
+      created_at:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      diagnosis:
+        $ref: '#/definitions/oip_dpmain_internal_app_domains_apimodel_response.DiagnosisResult'
+      id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      merchant_order_no:
+        example: ORD-20240101-001
+        type: string
+      status:
+        enum:
+        - PENDING
+        - DIAGNOSING
+        - COMPLETED
+        - FAILED
+        example: COMPLETED
+        type: string
+      updated_at:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+    type: object
+  oip_dpmain_internal_app_pkg_ginx.ErrorDetail:
+    properties:
+      info:
+        example: email is required
+        type: string
+      path:
+        example: email
+        type: string
+    type: object
+  oip_dpmain_internal_app_pkg_ginx.Meta:
+    properties:
+      code:
+        example: 200
+        type: integer
+      details:
+        items:
+          $ref: '#/definitions/oip_dpmain_internal_app_pkg_ginx.ErrorDetail'
+        type: array
+      message:
+        example: OK
+        type: string
+    type: object
+  oip_dpmain_internal_app_pkg_ginx.Response:
+    properties:
+      data: {}
+      meta:
+        $ref: '#/definitions/oip_dpmain_internal_app_pkg_ginx.Meta'
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@oip.example.com
+    name: API Support
+  description: 跨境订单智能诊断平台后端 API，提供订单接入和智能诊断服务
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: OIP Backend API
+  version: "1.0"
+paths:
+  /accounts:
+    post:
+      consumes:
+      - application/json
+      description: 创建一个新的账号，用于后续订单关联
+      parameters:
+      - description: 创建账号请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/oip_dpmain_internal_app_domains_apimodel_request.CreateAccountRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/oip_dpmain_internal_app_pkg_ginx.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/oip_dpmain_internal_app_domains_apimodel_response.AccountResponse'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/oip_dpmain_internal_app_pkg_ginx.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/oip_dpmain_internal_app_pkg_ginx.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: 创建账号
+      tags:
+      - accounts
+  /accounts/{id}:
+    get:
+      description: 根据账号ID获取账号详细信息
+      parameters:
+      - description: 账号ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/oip_dpmain_internal_app_pkg_ginx.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/oip_dpmain_internal_app_domains_apimodel_response.AccountResponse'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/oip_dpmain_internal_app_pkg_ginx.Response'
+        "404":
+          description: 账号不存在
+          schema:
+            $ref: '#/definitions/oip_dpmain_internal_app_pkg_ginx.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/oip_dpmain_internal_app_pkg_ginx.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取账号详情
+      tags:
+      - accounts
+  /health:
+    get:
+      description: 检查服务运行状态
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 健康检查
+      tags:
+      - system
+  /orders:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        创建订单并触发智能诊断（物流费率计算 + 异常检测）
+
+        Smart Wait 机制说明：
+        - 接口会 Hold 10s 等待诊断结果
+        - 10s 内完成诊断：返回 200 OK，包含完整诊断结果
+        - 10s 超时：返回 200 OK，code=3001（Processing），需要通过 poll_url 轮询结果
+
+        订单状态说明：
+        - PENDING: 订单已创建，等待诊断
+        - DIAGNOSING: 诊断进行中
+        - COMPLETED: 诊断完成（成功或失败）
+        - FAILED: 订单处理失败
+      parameters:
+      - description: 创建订单请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/oip_dpmain_internal_app_domains_apimodel_request.CreateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/oip_dpmain_internal_app_pkg_ginx.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/oip_dpmain_internal_app_domains_apimodel_response.OrderResponse'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/oip_dpmain_internal_app_pkg_ginx.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/oip_dpmain_internal_app_pkg_ginx.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: 创建订单
+      tags:
+      - orders
+  /orders/{id}:
+    get:
+      description: |-
+        根据订单ID获取订单详细信息（包含诊断结果）
+
+        使用场景：
+        - 创建订单返回 code=3001 时，通过此接口轮询结果
+        - 查询历史订单详情
+      parameters:
+      - description: 订单ID（UUID）
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/oip_dpmain_internal_app_pkg_ginx.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/oip_dpmain_internal_app_domains_apimodel_response.OrderResponse'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/oip_dpmain_internal_app_pkg_ginx.Response'
+        "404":
+          description: 订单不存在
+          schema:
+            $ref: '#/definitions/oip_dpmain_internal_app_pkg_ginx.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/oip_dpmain_internal_app_pkg_ginx.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取订单详情
+      tags:
+      - orders
+securityDefinitions:
+  ApiKeyAuth:
+    description: API Key 用于接口认证（当前版本暂未启用，保留占位）
+    in: header
+    name: api-key
+    type: apiKey
+swagger: "2.0"

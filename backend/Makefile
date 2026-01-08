@@ -15,6 +15,7 @@ help:
 	@echo "  make test          - 运行测试（所有模块）"
 	@echo "  make fmt           - 格式化代码（所有模块）"
 	@echo "  make clean         - 清理构建产物"
+	@echo "  make swagger       - 生成 Swagger API 文档"
 	@echo "  make run-dpmain    - 启动 dpmain API 服务"
 	@echo "  make run-dpsync    - 启动 dpsync Worker 服务"
 	@echo ""
@@ -62,6 +63,12 @@ clean:
 	@cd dpmain && make clean
 	@cd dpsync && make clean
 	@echo "✓ Clean completed"
+
+.PHONY: swagger
+swagger:
+	@echo "Generating swagger docs..."
+	@cd dpmain && swag init -g cmd/apiserver/main.go -o docs --parseDependency --parseInternal
+	@echo "✓ Swagger docs generated at dpmain/docs/"
 
 .PHONY: run-dpmain
 run-dpmain:

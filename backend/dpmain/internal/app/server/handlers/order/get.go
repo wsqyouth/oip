@@ -8,8 +8,22 @@ import (
 	"oip/dpmain/internal/app/pkg/ginx"
 )
 
-// Get 查询订单接口
-// GET /api/v1/orders/:id
+// Get godoc
+// @Summary      获取订单详情
+// @Description  根据订单ID获取订单详细信息（包含诊断结果）
+// @Description
+// @Description  使用场景：
+// @Description  - 创建订单返回 code=3001 时，通过此接口轮询结果
+// @Description  - 查询历史订单详情
+// @Tags         orders
+// @Produce      json
+// @Param        id path string true "订单ID（UUID）"
+// @Success      200 {object} ginx.Response{data=response.OrderResponse} "查询成功"
+// @Failure      400 {object} ginx.Response "参数错误"
+// @Failure      404 {object} ginx.Response "订单不存在"
+// @Failure      500 {object} ginx.Response "服务器错误"
+// @Security     ApiKeyAuth
+// @Router       /orders/{id} [get]
 func (h *OrderHandler) Get(c *gin.Context) {
 	orderID := c.Param("id")
 	if orderID == "" {

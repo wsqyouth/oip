@@ -1,5 +1,24 @@
 package main
 
+// @title           OIP Backend API
+// @version         1.0
+// @description     跨境订单智能诊断平台后端 API，提供订单接入和智能诊断服务
+// @termsOfService  http://swagger.io/terms/
+
+// @contact.name   API Support
+// @contact.email  support@oip.example.com
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      localhost:8080
+// @BasePath  /api/v1
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name api-key
+// @description API Key 用于接口认证（当前版本暂未启用，保留占位）
+
 import (
 	"context"
 	"errors"
