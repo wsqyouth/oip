@@ -21,3 +21,20 @@ type Logger interface {
 	Warnf(ctx context.Context, format string, args ...interface{})
 	Errorf(ctx context.Context, format string, args ...interface{})
 }
+
+// ProcessorFunc 处理函数类型
+type ProcessorFunc func(ctx context.Context) error
+
+// BusinessHandler 业务处理器接口
+type BusinessHandler interface {
+	Handle(ctx context.Context) ([]byte, error)
+}
+
+// Resulter 结果处理器接口
+type Resulter interface {
+	Set(ctx context.Context, data interface{}) error
+	Get(ctx context.Context) interface{}
+}
+
+// HandlerFactory Handler 构造函数
+type HandlerFactory func(ctx context.Context, baseHandler *BaseHandler) (BusinessHandler, error)

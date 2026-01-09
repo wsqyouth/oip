@@ -10,6 +10,7 @@ import (
 	"github.com/google/wire"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	gormlogger "gorm.io/gorm/logger"
 
 	"oip/dpmain/internal/app/config"
 	"oip/dpmain/internal/app/consumer"
@@ -88,7 +89,9 @@ var HandlerSet = wire.NewSet(
 
 // ProvideDB 提供数据库连接
 func ProvideDB(cfg *config.Config) (*gorm.DB, func(), error) {
-	db, err := gorm.Open(mysql.Open(cfg.MySQL.DSN), &gorm.Config{})
+	db, err := gorm.Open(mysql.Open(cfg.MySQL.DSN), &gorm.Config{
+		Logger: gormlogger.Default.LogMode(gormlogger.Error), // 只记录错误级别日志，忽略 ErrRecordNotFound
+	})
 	if err != nil {
 		return nil, nil, err
 	}

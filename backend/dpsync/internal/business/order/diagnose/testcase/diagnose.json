@@ -1,0 +1,132 @@
+[
+  {
+    "order_id": "ord_550e8400e29b41d4",
+    "account_id": 1,
+    "merchant_order_no": "MO-2024-001",
+    "shipment": {
+      "ship_from": {
+        "country": "US",
+        "zip": "10001"
+      },
+      "ship_to": {
+        "country": "CN",
+        "zip": "100000"
+      },
+      "parcels": [
+        {
+          "weight": {
+            "value": 2.5,
+            "unit": "kg"
+          },
+          "items": [
+            {
+              "sku": "SKU-12345",
+              "quantity": 2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "order_id": "ord_661f9511f3ac52e5",
+    "account_id": 2,
+    "merchant_order_no": "MO-2024-002",
+    "shipment": {
+      "ship_from": {
+        "country": "US",
+        "zip": "90001"
+      },
+      "ship_to": {
+        "country": "JP",
+        "zip": "100-0001"
+      },
+      "parcels": [
+        {
+          "weight": {
+            "value": 5.0,
+            "unit": "kg"
+          },
+          "items": [
+            {
+              "sku": "SKU-67890",
+              "quantity": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "order_id": "ord_heavy_package",
+    "account_id": 3,
+    "merchant_order_no": "MO-2024-003",
+    "shipment": {
+      "ship_from": {
+        "country": "US",
+        "zip": "10001"
+      },
+      "ship_to": {
+        "country": "UK",
+        "zip": "SW1A 1AA"
+      },
+      "parcels": [
+        {
+          "weight": {
+            "value": 12.5,
+            "unit": "kg"
+          },
+          "items": [
+            {
+              "sku": "SKU-HEAVY",
+              "quantity": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "order_id": "ord_missing_sku",
+    "account_id": 4,
+    "merchant_order_no": "MO-2024-004",
+    "shipment": {
+      "ship_from": {
+        "country": "US",
+        "zip": "10001"
+      },
+      "ship_to": {
+        "country": "CA",
+        "zip": "M5H 2N2"
+      },
+      "parcels": [
+        {
+          "weight": {
+            "value": 1.0,
+            "unit": "kg"
+          },
+          "items": [
+            {
+              "quantity": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "order_id": "ord_no_parcels",
+    "account_id": 5,
+    "merchant_order_no": "MO-2024-005",
+    "shipment": {
+      "ship_from": {
+        "country": "US",
+        "zip": "10001"
+      },
+      "ship_to": {
+        "country": "DE",
+        "zip": "10115"
+      }
+    }
+  }
+]

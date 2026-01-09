@@ -7,7 +7,6 @@ import (
 
 	"go.uber.org/atomic"
 
-	"oip/dpsync/internal/business"
 	"oip/dpsync/internal/domains"
 	"oip/dpsync/internal/framework"
 	"oip/dpsync/pkg/config"
@@ -23,16 +22,16 @@ type Manager interface {
 
 // ManagerInstance Manager 实例
 type ManagerInstance struct {
-	ctx              context.Context
-	cfg              *config.Config
-	lmstfyClient     *lmstfy.Client
-	diagnosisService *business.DiagnosisService
-	workers          []Worker
-	closing          *atomic.Bool // 原子操作标志
-	shutdownCh       chan struct{}
-	wg               sync.WaitGroup
-	mu               sync.RWMutex
-	logger           logger.Logger
+	ctx           context.Context
+	cfg           *config.Config
+	lmstfyClient  *lmstfy.Client
+	callbackQueue string
+	workers       []Worker
+	closing       *atomic.Bool
+	shutdownCh    chan struct{}
+	wg            sync.WaitGroup
+	mu            sync.RWMutex
+	logger        logger.Logger
 }
 
 // NewManagerInstance 创建 Manager
@@ -45,8 +44,6 @@ func NewManagerInstance(cfg *config.Config, log logger.Logger) (Manager, error) 
 		return nil, fmt.Errorf("failed to create lmstfy client: %w", err)
 	}
 
-	// 获取第一个 worker 的 callback queue 配置（假设所有 worker 使用相同的 callback queue）
-	// TBC: 如果未来需要支持不同的 callback queue，可以改为 map[workerName]callbackQueue
 	var callbackQueue string
 	if len(cfg.Workers) > 0 {
 		callbackQueue = cfg.Workers[0].CallbackQueue
@@ -55,23 +52,17 @@ func NewManagerInstance(cfg *config.Config, log logger.Logger) (Manager, error) 
 		return nil, fmt.Errorf("callback_queue is required in worker config")
 	}
 
-	// 创建 DiagnosisService（新版本：只需要 lmstfy 客户端和 callback 队列）
-	diagnosisService := business.NewDiagnosisService(
-		lmstfyClient,
-		callbackQueue,
-	)
-
-	log.Infof(ctx, "[Manager] DiagnosisService initialized with callback_queue: %s", callbackQueue)
+	log.Infof(ctx, "[Manager] Initialized with callback_queue: %s", callbackQueue)
 
 	return &ManagerInstance{
-		ctx:              ctx,
-		cfg:              cfg,
-		lmstfyClient:     lmstfyClient,
-		diagnosisService: diagnosisService,
-		closing:          atomic.NewBool(false),
-		shutdownCh:       make(chan struct{}),
-		workers:          make([]Worker, 0),
-		logger:           log,
+		ctx:           ctx,
+		cfg:           cfg,
+		lmstfyClient:  lmstfyClient,
+		callbackQueue: callbackQueue,
+		closing:       atomic.NewBool(false),
+		shutdownCh:    make(chan struct{}),
+		workers:       make([]Worker, 0),
+		logger:        log,
 	}, nil
 }
 
@@ -148,8 +139,8 @@ func (m *ManagerInstance) loadWorkers() error {
 			Timeout:     workerCfg.Processor.Timeout,
 		}
 
-		// 获取 GetProcess 函数（业务路由层，注入 DiagnosisService）
-		getProcess := domains.GetProcess(m.logger, m.diagnosisService)
+		// 获取 GetProcess 函数
+		getProcess := domains.GetProcess(m.logger, m.lmstfyClient, m.callbackQueue)
 
 		// 创建 Worker 实例
 		worker, err := NewWorkerInstance(

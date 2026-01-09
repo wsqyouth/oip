@@ -17,7 +17,7 @@ lmstfy:
   host: "localhost"
   port: 7777
   namespace: "oip"
-  token: "01KDCBF5BG0THBC24F1V53XPR1"
+  token: "01KEED5FWJB9GT21S0GVQ4SXXW"
 
 workers:
   - name: "order-diagnose-worker"

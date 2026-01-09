@@ -16,13 +16,6 @@ build: tidy wire
 	@go build -o $(BIN_DIR)/$(PROGRAM) ./cmd/apiserver
 	@echo "✓ Build completed: $(BIN_DIR)/$(PROGRAM)"
 
-.PHONY: build-consumer
-build-consumer: tidy
-	@echo "Building $(CONSUMER) (deprecated)..."
-	@mkdir -p $(BIN_DIR)
-	@go build -o $(BIN_DIR)/$(CONSUMER) ./cmd/consumer
-	@echo "✓ Build completed: $(BIN_DIR)/$(CONSUMER)"
-
 .PHONY: build-callback-consumer
 build-callback-consumer: tidy
 	@echo "Building $(CALLBACK_CONSUMER)..."
@@ -47,11 +40,6 @@ endif
 run: build
 	@echo "Starting API Server..."
 	@./$(BIN_DIR)/$(PROGRAM)
-
-.PHONY: run-consumer
-run-consumer: build-consumer
-	@echo "Starting Consumer (deprecated)..."
-	@./$(BIN_DIR)/$(CONSUMER)
 
 .PHONY: run-callback-consumer
 run-callback-consumer: build-callback-consumer

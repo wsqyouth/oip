@@ -21,7 +21,7 @@ FastTest 是一个快速测试工具，用于验证 DPSYNC Worker 的业务逻�
 ```bash
 cd /Users/cooperswang/GolandProjects/awesomeProject/oip_backend/dpsync
 
-go run tools/fasttest/worker_fast_test.go --skip-db
+go run tools/fasttest/worker_fasttest.go --skip-db
 ```
 
 ### 2. 完整模式（测试完整流程）
@@ -33,15 +33,15 @@ go run tools/fasttest/worker_fast_test.go --skip-db
 docker-compose up -d mysql redis
 
 # 运行 FastTest
-go run tools/fasttest/worker_fast_test.go
+go run tools/fasttest/worker_fasttest.go
 ```
 
 ### 3. 指定自定义配置和测试用例
 
 ```bash
-go run tools/fasttest/worker_fast_test.go \
+go run tools/fasttest/worker_fasttest.go \
   --config ./config/worker.yaml \
-  --testcase ./internal/domains/handlers/order/diagnose/testcase/diagnose.json
+  --testcase ./internal/business/order/diagnose/testcase/diagnose.json
 ```
 
 ## 参数说明
@@ -49,7 +49,7 @@ go run tools/fasttest/worker_fast_test.go \
 | 参数 | 默认值 | 说明 |
 |------|--------|------|
 | `--config` | `./config/worker.yaml` | Worker 配置文件路径 |
-| `--testcase` | `./internal/domains/handlers/order/diagnose/testcase/diagnose.json` | 测试用例文件路径 |
+| `--testcase` | `./internal/business/order/diagnose/testcase/diagnose.json` | 测试用例文件路径 |
 | `--skip-db` | `false` | 是否跳过数据库和 Redis 操作 |
 
 ## 测试用例格式
@@ -78,7 +78,7 @@ go run tools/fasttest/worker_fast_test.go \
   FastTest - DPSYNC Worker 快速测试工具
 ========================================
 ✅ Config loaded: dpsync-worker
-✅ Loaded 2 test cases from ./internal/domains/handlers/order/diagnose/testcase/diagnose.json
+✅ Loaded 2 test cases from ./internal/business/order/diagnose/testcase/diagnose.json
 ⚠️  Skip-DB mode: Database and Redis operations disabled
 
 ========================================
@@ -116,7 +116,7 @@ Failed: 0 ❌
   FastTest - DPSYNC Worker 快速测试工具
 ========================================
 ✅ Config loaded: dpsync-worker
-✅ Loaded 2 test cases from ./internal/domains/handlers/order/diagnose/testcase/diagnose.json
+✅ Loaded 2 test cases from ./internal/business/order/diagnose/testcase/diagnose.json
 ✅ Database and Redis initialized
 
 ========================================
@@ -170,7 +170,7 @@ Failed: 0 ❌
 
 ## 扩展测试用例
 
-在 `internal/domains/handlers/order/diagnose/testcase/diagnose.json` 中添加更多测试用例：
+在 `internal/business/order/diagnose/testcase/diagnose.json` 中添加更多测试用例：
 
 ```json
 [
